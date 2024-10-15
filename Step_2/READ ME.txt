@@ -1,0 +1,7 @@
+Change settings in getSettings as needed.
+Change paths/settings in quick_bulk_preprocessing.
+If requiring EEG spectrum over 48Hz, change this in run_fft_and_plot.
+
+Main - run quick_bulk_preprocessing.
+
+Assumes that step 1 has run.
