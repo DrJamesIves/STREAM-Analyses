@@ -270,7 +270,7 @@ for file = 1:length(files)
         success = [success; 1];
     end
     
-    [fft, ~] = run_fft_and_plot(EEG, eeg_file, [root_out_path, '4. Clean segments\'], 0);
+    [fft, ~] = run_fft_and_plot(EEG, eeg_file, outpath_fft_full, 0);
     save(fullfile(outpath_fft_full, files(file).name), 'fft', 'dataInfo', "fft_readme");
 
     %% Segment and epoch
@@ -311,7 +311,7 @@ for file = 1:length(files)
     save(fullfile(outpath_segmented, files(file).name), 'EEG', 'dataInfo');
 
     % Rerun fft and save
-    [fft, ~] = run_fft_and_plot(EEG, eeg_file, [root_out_path, 'Segmented\'], 1);
+    [fft, ~] = run_fft_and_plot(EEG, eeg_file, outpath_fft_segmented, 1);
     save(fullfile(outpath_fft_segmented, files(file).name), 'fft', 'dataInfo', "fft_readme");
 
     % Reformat and save in a csv format with two columns for FOOOF analysis
