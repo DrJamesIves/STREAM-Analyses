@@ -15,12 +15,10 @@ addpath('E:\Birkbeck\Scripts\Stream\Theta\');
 % addpath(genpath('E:\Birkbeck\Scripts\Stream\brainstorm-tools\'));
 addpath(genpath('E:\Birkbeck\Scripts\James Common\'));
 
-root_path = 'E:\Birkbeck\STREAM\Datasets\2. Preprocessed\2.4 FFT\';
-data_path = fullfile(root_path, '2.4.1 Full\');
-
-
-output_averaged_spectral_folder = fullfile(root_path, 'Overview data\');
-output_folder_ET = 'E:\Birkbeck\STREAM\Datasets\1. Raw\ET\';
+root_path = 'E:\Birkbeck\STREAM INDIA\Datasets\';
+data_path = fullfile(root_path, '2. Preprocessed\2.4 FFT\2.4.1 Full\');
+output_averaged_spectral_folder = fullfile(root_path, '2. Preprocessed\Overview data\');
+output_folder_ET = fullfile(root_path, '1. Raw\ET\');
 
 % To save on clutter make the folders needed manually
 folders = {output_averaged_spectral_folder; ...
