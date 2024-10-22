@@ -32,10 +32,13 @@ addpath(genpath('E:\Birkbeck\Scripts\James Common\'));
 
 root_path = 'E:\Birkbeck\STREAM\Datasets\2. Preprocessed\';
 output_averaged_spectral_folder = fullfile(root_path, 'Overview data\');
+output_theta_spectral_folder = fullfile(root_path, '2.4 FFT\2.4.5 Full - theta only\');
+output_avg_seg_theta_spectral_folder = fullfile(root_path, '2.4 FFT\2.4.6 Segmented - theta only\');
 output_folder_ET = 'E:\Birkbeck\STREAM\Datasets\1. Raw\ET\';
 
-
 folders = {output_averaged_spectral_folder; ...
+    output_theta_spectral_folder; ...
+    output_avg_seg_theta_spectral_folder; ...
     output_folder_ET};
 
 for folder = 1:length(folders)
@@ -65,7 +68,7 @@ max_hz  = 100;
 if epoch_eeg; ds = getSettings(); epochEEG(ds); end
 
 % To get these run the bulk preprocessing
-files = dir(fullfile(root_path, '2.2 Preprocessed_EEG\'));
+files = dir(fullfile(root_path, '2.2 Preprocessed_EEG\2.2.1 Full'));
 movedParticipants = {}; % List to keep track of moved participant files
 all_avg_theta = [];
 theta_table = table;
@@ -95,6 +98,12 @@ occipital_indices = find(ismember(channel_labels, occipital_channels));
 
 %% Spectral loop
 for file = 3:length(files)-1
+
+    % Ignores anything that is not a .mat file
+    if ~endsWith(files(file).name, '.mat')
+        continue
+    end
+
     load(fullfile(files(file).folder, files(file).name));
     Fs = EEG.srate;
 
@@ -222,8 +231,8 @@ for file = 3:length(files)-1
         condition = {'Social'};
     elseif strcmp(condition, 'Toy')
         condition = {'Non-social'};
-    else
-        input('Condition not correct, check and reset', 's')
+%    else
+%        input('Condition not correct, check and reset', 's')
     end
     % theta_power_list = [theta_power_list; logTheta];
 
