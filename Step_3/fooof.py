@@ -71,6 +71,9 @@ region_list = ['central', 'frontal', 'occipital', 'parietal']
 # Can be either "Whole head" or "Regional"
 regional = 'Regional'
 
+# Set up the figure object here to reuse and save space
+fig = plt.figure()
+ax = fig.add_subplot()
 
 for file_index, filename in enumerate(os.listdir(directory)):
 
@@ -82,7 +85,7 @@ for file_index, filename in enumerate(os.listdir(directory)):
         continue  # Skip to the next iteration if the filename doesn't end with '.csv'
     
     print(f'Processing: {filename}')
-    
+
     # Check the conditions and regions
     condition = [c for c in condition_list if c in filename][0]
     region = [r for r in region_list if r in filename]
@@ -91,72 +94,71 @@ for file_index, filename in enumerate(os.listdir(directory)):
     else:
         region = 'Whole_head'
         
-    if filename.endswith('.csv'):
-        filepath = os.path.join(directory, filename)
+    filepath = os.path.join(directory, filename)
 
-        # Use context manager to read the CSV file
-        with open(filepath, 'r') as file:
-            data = pd.read_csv(file)
+    # Use context manager to read the CSV file
+    with open(filepath, 'r') as file:
+        data = pd.read_csv(file)
 
-        # Extract the frequency and power spectrum data
-        # Since implementing the clean_drifts script in matlab there is much less power in the <1Hz range
-        # which throws this off, the first 5 values are all < 1Hz so are exlcuded here.
-        freqs = data.iloc[4:, 0].values
-        powers = data.iloc[4:, 1:].values
+    # Extract the frequency and power spectrum data
+    # Since implementing the clean_drifts script in matlab there is much less power in the <1Hz range
+    # which throws this off, the first 5 values are all < 1Hz so are exlcuded here.
+    freqs = data.iloc[4:, 0].values
+    powers = data.iloc[4:, 1:].values
 
-        # Loop over each electrode (column 2 to 21 in the CSV file)
-        for electrode in range(powers.shape[1]):
-            power_spectrum = powers[:, electrode]
+    # Loop over each electrode (column 2 to 21 in the CSV file)
+    for electrode in range(powers.shape[1]):
+        power_spectrum = powers[:, electrode]
 
-            # Initialize the FOOOF model
-            fm = FOOOF(peak_width_limits=[1, 6], max_n_peaks=6, min_peak_height=0.1, aperiodic_mode='fixed')
+        # Initialize the FOOOF model
+        fm = FOOOF(peak_width_limits=[1, 6], max_n_peaks=6, min_peak_height=0.1, aperiodic_mode='fixed')
 
-            # Fit the model to the power spectrum
-            fm.fit(freqs, powers[:, electrode])
+        # Fit the model to the power spectrum
+        fm.fit(freqs, powers[:, electrode])
 
-            # Extract the parameters
-            aperiodic_params = fm.aperiodic_params_
-            peak_params = fm.peak_params_
-            r_squared = fm.r_squared_
-            error = fm.error_
+        # Extract the parameters
+        aperiodic_params = fm.aperiodic_params_
+        peak_params = fm.peak_params_
+        r_squared = fm.r_squared_
+        error = fm.error_
 
-            peak_frequency = []
-            peak_amplitude = []
-            peak_width = []
+        peak_frequency = []
+        peak_amplitude = []
+        peak_width = []
 
-            for i, peak in enumerate(peak_params):
-                peak_frequency.append(peak[0])
-                peak_amplitude.append(peak[1])
-                peak_width.append(peak[2])
-                
-            # Save the results in a dictionary
-            result = {
-                'Filename': filename,
-                'Condition': condition,
-                'Region': region,
-                'Offset': aperiodic_params[0],
-                'Exponent': aperiodic_params[1],
-                'R_squared': r_squared,
-                'Error': error,
-                'Peak_Freqs': peak_frequency,
-                'Peak_Amp': peak_amplitude,
-                'Peak_Width': peak_width
-            }
-            results.append(result)
+        for i, peak in enumerate(peak_params):
+            peak_frequency.append(peak[0])
+            peak_amplitude.append(peak[1])
+            peak_width.append(peak[2])
+            
+        # Save the results in a dictionary
+        result = {
+            'Filename': filename,
+            'Condition': condition,
+            'Region': region,
+            'Offset': aperiodic_params[0],
+            'Exponent': aperiodic_params[1],
+            'R_squared': r_squared,
+            'Error': error,
+            'Peak_Freqs': peak_frequency,
+            'Peak_Amp': peak_amplitude,
+            'Peak_Width': peak_width
+        }
+        results.append(result)
 
-            # Plot the original and the FOOOF model
-            plt.figure()
-            plot_spectrum(freqs, powers[:, electrode], log_powers=True, label='Original Spectrum')
-            fm.plot()
-            f_name = filename[:-4]
-            plt.title(f'FOOOF Model - {f_name} - Region {region}')
-            plt.savefig(f'{directory}\\Figures\\FOOOF_Model_{f_name}_region_{region}.png')
-            plt.close('all')
+        # Plot the original and the FOOOF model
 
-            # Clear the figure from memory
-            plt.clf()
-            plt.cla()
-            gc.collect() 	 # Garbage collect to free up memory
+        #plot_spectrum(freqs, powers[:, electrode], log_powers=True, label='Original Spectrum')
+        fm.plot(ax=ax)
+        f_name = filename[:-4]
+        plt.title(f'FOOOF Model - {f_name} - Region {region}')
+        plt.savefig(f'{directory}\\Figures\\FOOOF_Model_{f_name}_region_{region}.png')
+#         plt.close('all')
+
+        # Clear the figure from memory
+#         plt.clf()
+        plt.cla()
+        gc.collect() 	 # Garbage collect to free up memory
     
     if file_index % 100 == 0:
         # Convert the results to a DataFrame
