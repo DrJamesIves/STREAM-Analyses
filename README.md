@@ -34,3 +34,6 @@ To run:
 -	Run first_analyses.m and fooof.py
 <!-- end of the list -->
 Assumes that steps 1 and 2 have run or data is in a similar format.
+## To keep in mind
+These scripts were originally produced to accommodate an Indian and Malawian cohort. Because of some of the differences between the Indian and Malawian cohort there are some settings that are different. From an outside standpoint these are arbitrary. The Malawian cohort required that the EEG evets were reconstructed from eyetracking data, which meant that in EEG_ET_Maintenance there is a whole section that does this, which is unnecessary for the Indian dataset. Due to this events structuring, only files with events from the Malawian cohort were moved forward. Whereas the Indian cohort had potential duplicates and others. So in the Indian pipeline the EEG data from all sessions are first concatenated so that all trials can then be epoched from the same master file.
+This may not apply to the data that you are processing.
