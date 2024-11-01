@@ -30,7 +30,7 @@ function [success, eeg_data] = quick_bulk_preprocessing(eeg_data)
 % Requires eeglab.
 
 success = [];
-dataset = 'Malawi';
+dataset = 'India';
 epoch_eeg = 0;
 
 %% Paths
@@ -46,6 +46,15 @@ if epoch_eeg
     in = input('Have you changed getSettings file for the EEG trial epoching?', 's');
     ds = getSettings();
     epochEEG(ds);
+    % Some tasks are very small but also spaced out within the task list. It makes sense from an preprocessing perspective to remerge them after 
+    % epoching as many steps have a minimum length. Similarly, for analyses such as FOOOF, having a longer continuous trial that can be segmented is
+    % preferable. If trial by trial analysis is desired the events will still be present.
+    switch dataset
+        case 'Malawi'
+            remergeTrials(ds, {'Between_Vid'}, dir(strcat(ds.settings.paths.epochedEEGPath, '*.mat'))) %; 'Gap'; 'Gap_Faces_English'});
+        case 'India'
+            remergeTrials(ds, {'Between_Vid'; 'Gap'; 'Gap_Faces_English'}, dir(strcat(ds.settings.paths.epochedEEGPath, '*.mat')));
+    end
 end
 
 switch dataset
@@ -62,7 +71,8 @@ switch dataset
 
     case 'India'
         root = 'E:\Birkbeck\STREAM INDIA\Datasets\2. Preprocessed\';
-        root_path = fullfile(root, '2.1 Epoched_EEG\');
+        % root_path = fullfile(root, '2.1 Epoched_EEG\');
+        root_path = 'E:\Birkbeck\STREAM INDIA\Datasets\2. Preprocessed\2.2 Preprocessed_EEG\2.2.1 Full\';
         outpath_full = fullfile(root, '2.2 Preprocessed_EEG\2.2.1 Full\');
         outpath_segmented = fullfile(root, '2.2 Preprocessed_EEG\2.2.2 Segmented\');
                 rejected_path = fullfile(root, '2.2 Preprocessed_EEG\2.2.3 Rejected data\');
@@ -121,9 +131,9 @@ for file = 1:length(files)
     end
 
     % Uncomment to only focus on one trial type
-    % if ~contains(files(file).name, 'Rest_Vid')
-    %     continue
-    % end
+    if ~contains(files(file).name, 'Rest_Vid_Toy_Onset')
+        continue
+    end
 
     disp(fprintf('Processing ...%s', eeg_file))
 
@@ -131,7 +141,7 @@ for file = 1:length(files)
     load(eeg_file);
     Fs = EEG.srate;
 
-    % Chech that the file is above the minimum length, if not reject and save
+    Chech that the file is above the minimum length, if not reject and save
     if size(EEG.data, 2) < Fs * min_trial_length
         save(fullfile(rejected_path, files(file).name), 'EEG', 'dataInfo');
         continue
@@ -201,7 +211,7 @@ for file = 1:length(files)
     % Clear EEGOUT variable we no longer need and store the number of channels removed from the robust average for later
     clear EEGOUT
     dataInfo.chansRemovedFromRobustAvg = [dataInfo.chansRemovedFromRobustAvg, removedChans];
-    
+
     %% 5. Check for bad channels, bridging and interpolate
     % Use a slightly narrower check to identify bad channels that are either noisy or bridged.
     try
@@ -269,9 +279,9 @@ for file = 1:length(files)
         save(fullfile(outpath_full, files(file).name), 'EEG', 'dataInfo');
         success = [success; 1];
     end
-    
+
     [fft, ~] = run_fft_and_plot(EEG, eeg_file, outpath_fft_full, 0);
-    save(fullfile(outpath_fft_full, files(file).name), 'fft', 'dataInfo', "fft_readme");
+    save(fullfile(outpath_fft_full, files(file).name), 'fft', 'dataInfo', "fft_readme", 'ds'); %  
 
     %% Segment and epoch
     % If we are to segment and average, this segments the data into smaller (usually 1s) segments and averages before the data are put through the FFT
@@ -308,11 +318,11 @@ for file = 1:length(files)
     EEG.comments = [EEG.comments; {comment}];
 
     % Save the segmented data
-    save(fullfile(outpath_segmented, files(file).name), 'EEG', 'dataInfo');
+    save(fullfile(outpath_segmented, files(file).name), 'EEG', 'dataInfo', 'ds');
 
     % Rerun fft and save
     [fft, ~] = run_fft_and_plot(EEG, eeg_file, outpath_fft_segmented, 1);
-    save(fullfile(outpath_fft_segmented, files(file).name), 'fft', 'dataInfo', "fft_readme");
+    save(fullfile(outpath_fft_segmented, files(file).name), 'fft', 'dataInfo', "fft_readme", 'ds');
 
     % Reformat and save in a csv format with two columns for FOOOF analysis
     fft2 = fft;
@@ -322,7 +332,9 @@ for file = 1:length(files)
     spectrum = [freqs, powers];
 
     % Write whole head fft
-    writematrix(spectrum, fullfile(outpath_fft_segmented_whole_head_avg, [files(file).name(1:end-4), '.csv']))
+    % writematrix(spectrum, fullfile(outpath_fft_segmented_whole_head_avg, [files(file).name(1:end-4), '.csv']))
+    % With the 2024b release it looks like writematrix has stopped writing with the precision needed here, it rounds numbers in a haphazard way
+    write_csv_with_precision_decimals(spectrum, fullfile(outpath_fft_segmented_whole_head_avg, [files(file).name(1:end-4), '.csv']), 10);
 
     % Frontal electrodes only
     fft = fft2(:, frontal_indices, :);
@@ -330,7 +342,8 @@ for file = 1:length(files)
     freqs = squeeze(fft(2,:))'; % Assuming first column is frequency
     powers = squeeze(fft(1,:))'; % Assuming columns 2 to end are power data
     spectrum = [freqs, powers];
-    writematrix(spectrum, fullfile(outpath_fft_segmented_regional_avg, [files(file).name(1:end-4), '_frontal.csv']))
+    % writematrix(spectrum, fullfile(outpath_fft_segmented_regional_avg, [files(file).name(1:end-4), '_frontal.csv']))
+    write_csv_with_precision_decimals(spectrum, fullfile(outpath_fft_segmented_regional_avg, [files(file).name(1:end-4), '_frontal.csv']), 10);
 
     % Central electrodes only
     fft = fft2(:, central_indices, :);
@@ -338,7 +351,8 @@ for file = 1:length(files)
     freqs = squeeze(fft(2,:))'; % Assuming first column is frequency
     powers = squeeze(fft(1,:))'; % Assuming columns 2 to end are power data
     spectrum = [freqs, powers];
-    writematrix(spectrum, fullfile(outpath_fft_segmented_regional_avg, [files(file).name(1:end-4), '_central.csv']))
+    % writematrix(spectrum, fullfile(outpath_fft_segmented_regional_avg, [files(file).name(1:end-4), '_central.csv']))
+    write_csv_with_precision_decimals(spectrum, fullfile(outpath_fft_segmented_regional_avg, [files(file).name(1:end-4), '_central.csv']), 10);
 
     % Parietal electrodes only
     fft = fft2(:, parietal_indices, :);
@@ -346,7 +360,8 @@ for file = 1:length(files)
     freqs = squeeze(fft(2,:))'; % Assuming first column is frequency
     powers = squeeze(fft(1,:))'; % Assuming columns 2 to end are power data
     spectrum = [freqs, powers];
-    writematrix(spectrum, fullfile(outpath_fft_segmented_regional_avg, [files(file).name(1:end-4), '_parietal.csv']))
+    % writematrix(spectrum, fullfile(outpath_fft_segmented_regional_avg, [files(file).name(1:end-4), '_parietal.csv']))
+    write_csv_with_precision_decimals(spectrum, fullfile(outpath_fft_segmented_regional_avg, [files(file).name(1:end-4), '_parietal.csv']), 10);
 
     % Occipital electrodes only
     fft = fft2(:, frontal_indices, :);
@@ -354,7 +369,8 @@ for file = 1:length(files)
     freqs = squeeze(fft(2,:))'; % Assuming first column is frequency
     powers = squeeze(fft(1,:))'; % Assuming columns 2 to end are power data
     spectrum = [freqs, powers];
-    writematrix(spectrum, fullfile(outpath_fft_segmented_regional_avg, [files(file).name(1:end-4), '_occipital.csv']))
+    % writematrix(spectrum, fullfile(outpath_fft_segmented_regional_avg, [files(file).name(1:end-4), '_occipital.csv']))
+    write_csv_with_precision_decimals(spectrum, fullfile(outpath_fft_segmented_regional_avg, [files(file).name(1:end-4), '_occipital.csv']), 10);
     
     clear EEG EEG2 epoch_start_times fft fft2 freqs mask powers segmented_EEG signal spectrum times
 
