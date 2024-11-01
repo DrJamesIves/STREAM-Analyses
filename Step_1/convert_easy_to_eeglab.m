@@ -1,4 +1,4 @@
-function [eeg_data] = convert_easy_to_eeglab(easy_files)
+function [eeg_data] = convert_easy_to_eeglab(easy_files, eeg_output_path)
 
 % Author: James Ives | james.white1@bbk.ac.uk / james.ernest.ives@gmail.com
 % Date: 14th October 2024
@@ -58,9 +58,6 @@ for i = 1:length(easy_files)
         % Used to match with an et file
         EEG.matched = 0;
 
-        % Store the new filename and location
-        EEG.new_filepath = fullfile(easy_files(i).folder, [name '.mat']);
-
         % Attempt to load in the corresponding info file
         try
             % Read in the info file
@@ -85,8 +82,25 @@ for i = 1:length(easy_files)
             fprintf('\nNo info file for %s\n', name)
         end
 
+        % Check whether other eeg data has been saved for this participant and if so increase the counter
+        file_counter = 1;
+        temp_name = split(name, '_'); temp_name = temp_name{2};
+        for j = 1:100
+            if exist(fullfile(easy_files(i).name, [name, '_', num2str(j), '.mat']), 'file')
+                file_counter = file_counter + 1;
+            else 
+                break
+            end
+        end
+
+        raw_name = [temp_name, '_', num2str(file_counter)];
+        name = [name, '_', num2str(file_counter)];
+
+        % Store the new filename and location
+        EEG.new_filepath = fullfile(easy_files(i).folder, [name '.mat']);
+
         % Store the EEG data in the structure that is returned
-        eeg_data = [eeg_data; {EEG}];
+        eeg_data = [eeg_data; EEG];
 
         % Save data in .mat format in the same folder
         save(fullfile(easy_files(i).folder, [name '.mat']), 'EEG');
