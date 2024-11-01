@@ -59,7 +59,14 @@ endless_event_codes = {{'400', '401', '402'}'; ...
 % Names for the above trials in the same order (these will be used for file names).
 endless_event_names = {'Aud_gate'; 'fast_erp'};
 % Event codes for syncing, skipping , attention getting, pausing and fixations among others.
+
 event_codes_to_ignore = {'247', '248', '249', '250', '251', '252', '253', '254'}';
+
+% These codes need neither be acknowledged or ignored
+% 11XX codes are for the rocket task, these have a defined onset and offset
+% 62-72 codes are for the gap task, these have a defined onset and offset
+    % '1103', '1104', '1105', '1106', '1107', '1108', '1109', '1110', '1111', '1112', '1113', '1114', '1115', ...
+    % '62', '63', '64', '65', '66', '67', '68', '69', '70', '71', '72';
 
 %% Find raw files
 % Loops through all the raw EEG files
