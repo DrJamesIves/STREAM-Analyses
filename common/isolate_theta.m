@@ -17,7 +17,7 @@ addpath(genpath('E:\Birkbeck\Scripts\James Common\'));
 
 root_path = 'E:\Birkbeck\STREAM INDIA\Datasets\';
 data_path = fullfile(root_path, '2. Preprocessed\2.4 FFT\2.4.1 Full\');
-output_averaged_spectral_folder = fullfile(root_path, '2. Preprocessed\Overview data\');
+output_averaged_spectral_folder = fullfile(root_path, '2. Preprocessed\Theta data\');
 output_folder_ET = fullfile(root_path, '1. Raw\ET\');
 
 % To save on clutter make the folders needed manually
@@ -76,24 +76,43 @@ for file = 3:length(files)-1
     [~, name, ~] = fileparts(files(file).name);
     parts = strsplit(name, '_');
     participantName = parts{1};
-    condition = strcat(parts{2}, '_', parts{3},  '_', parts{4}, '_', parts{5}); % Extract condition (Face_Onset or Toy_Onset)
+
+    % Find and label the conditon, as there are multiple parts a direct search is needed
+    switch parts{2}
+        case 'Gap'
+            condition = parts{2};
+        case {'Gap', 'Reading', 'Rocket'}
+            condition = parts{2};
+            % Adds the trial number on the end
+            condition = [condition, '_', parts{end}];
+        case 'Between'
+            condition = strjoin(parts(2:3), '_');
+        case {'Aud', 'Between', 'fast'}
+            condition = strjoin(parts(2:3), '_');
+            condition = [condition, '_', parts{end}];
+        case 'Face'
+            condition = strjoin(parts(2:6), '_');
+            condition = [condition, '_', parts{end}];
+        case 'Rest'
+            switch parts{4}
+                case 'Face'
+                    condition = 'Social_Rest_Vid';
+                case 'Toy'
+                    condition = 'Non-social_Rest_Vid';
+            end
+            % Differentiates merged and non-merged files
+            if strcmp(parts{5}, 'Onset-merged')
+                condition = [condition, '-merged'];
+            else
+                condition = [condition, '_', parts{end}];
+            end
+    end
 
     whole_head_theta = mean(squeeze(mean(fft(1,:,thetaIndex), 2)),1);
     frontal_theta = mean(squeeze(mean(fft(1,frontal_indices,thetaIndex), 2)),1);
     central_theta = mean(squeeze(mean(fft(1,central_indices,thetaIndex), 2)),1);
     parietal_theta = mean(squeeze(mean(fft(1,parietal_indices,thetaIndex), 2)),1);
     occipital_theta = mean(squeeze(mean(fft(1,occipital_indices,thetaIndex), 2)),1);
-
-    % Store data in lists
-    % ppt_list = [ppt_list; {participantName}];
-    if strcmp(condition, 'Rest_Vid_Face_Onset')
-        condition = {'Social'};
-    elseif strcmp(condition, 'Rest_Vid_Toy_Onset')
-        condition = {'Non-social'};
-    else
-        input('Condition not correct, check and reset', 's')
-    end
-    % theta_power_list = [theta_power_list; logTheta];
 
     % Append regional data to the table
     ppt_list = [ppt_list; {participantName}; {participantName}; {participantName}; {participantName}; {participantName}];
