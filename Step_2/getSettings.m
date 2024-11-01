@@ -38,7 +38,7 @@ ds.settings.general.procET                          = 0; % Whether you want to p
 % First we're going to set the paths, it's expected that there will be a rootpath, within the rootpath there should be a data folder, within the
 % data folder each participant should have it's own folder. Data will be saved in the raw folder and preprocessed folders
 % General paths
-ds.settings.paths.rootPath                          = fullfile('E:\Birkbeck\STREAM\Datasets');
+ds.settings.paths.rootPath                          = fullfile('E:\Birkbeck\STREAM INDIA\Datasets');
 [ds.settings.paths.rootPath]                        = checkPathEnd(ds.settings.paths.rootPath);
 
 if ds.settings.general.procEEG
@@ -117,6 +117,13 @@ ds.settings.eventNames                              = {'Between_Vid'; ...
                                                     'Rest_Vid_EN_Face'; 'Rest_Vid_NL_Face'; 'Rest_Vid_SW_Face'; 'Rest_Vid_PL_Face'; ...
                                                     'Rest_Vid_GM_Face'; 'Rest_Vid_ES_Face'; 'Rest_Vid_FR_Face'; ...
                                                     'Rocket'};
+
+% Some trials are too short and are spread throughout the task list. Here we can merge these trials with pop_mergeset so that there is a longer
+% continuous trial.
+ds.settings.trialNumsToMerge                        = [[58 59]; ...
+                                                       [60 61]; [84 85]; [82 83]; [80 81]];
+ds.settings.trialNamesToMerge                       = {'Between_Vid'; ...
+                                                    'Gap'; 'Gap_Faces_English'};
 
 ds.settings.checkTrialLength                        = 0; % Whether we want to check trial lengths or not
 ds.settings.maxEventDiscrepency                     = 0; % The maximum discrepencies allowed between trials within a trial type in seconds. This is used as a check when epoching the data.
