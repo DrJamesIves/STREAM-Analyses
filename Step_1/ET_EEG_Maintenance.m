@@ -1,4 +1,4 @@
-function [] = ET_EEG_Maintenance_India()
+function [] = ET_EEG_Maintenance()
 
 % ------------------------------------------------------------------------------------------------------
 % Author: James Ives
