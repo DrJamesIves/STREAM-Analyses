@@ -1,21 +1,21 @@
-function [] = ET_EEG_Maintenance()
+function [] = ET_EEG_Maintenance_India()
 
 % ------------------------------------------------------------------------------------------------------
 % Author: James Ives
 % Email: james.white1@bbk.ac.uk / james.ernest.ives@gmail.com
 % Date: 14th October 2024
-% 
-% This script was written by James Ives and is released under the GNU General Public License v3.0. 
-% 
-% You are free to redistribute and/or modify this script under the terms of the GNU General Public 
-% License as published by the Free Software Foundation, either version 3 of the License, or (at 
+%
+% This script was written by James Ives and is released under the GNU General Public License v3.0.
+%
+% You are free to redistribute and/or modify this script under the terms of the GNU General Public
+% License as published by the Free Software Foundation, either version 3 of the License, or (at
 % your option) any later version.
-% 
-% This script is provided "as-is" without any warranty; without even the implied warranty of 
-% MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more 
+%
+% This script is provided "as-is" without any warranty; without even the implied warranty of
+% MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more
 % details: https://www.gnu.org/licenses/gpl-3.0.html
-% 
-% I am happy to collaborate on any projects related to this script. 
+%
+% I am happy to collaborate on any projects related to this script.
 % Feel free to contact me at the email addresses provided.
 % -----------------------------------------------------------------------------------------------------
 
@@ -37,11 +37,11 @@ addpath(genpath('E:\Birkbeck\Scripts\James Common\'));
 
 % Settings
 decode_et = 1;         % from uint8 to .mat, epochs ET data
-convert_eeg = 1;       % from .easy to eeglab format
-transfer_events = 1;   % Transfer events from ET to EEG
-save_to_folders = 1;   % Save the files to a folder outside the raw data structure
-save_data_log = 1;     % Save data log to show what has been converted/decoded and any notes
-dataset = 'Malawi';
+convert_eeg = 0;       % from .easy to eeglab format
+transfer_events = 0;   % Transfer events from ET to EEG
+% save_to_folders = 1;   % depreceated % Save the files to a folder outside the raw data structure
+save_data_log = 0;     % Save data log to show what has been converted/decoded and any notes
+dataset = 'India';
 
 % Data structures
 notes = {};
@@ -53,12 +53,10 @@ switch dataset
         % Set India specific notes and raw_path
         notes = [notes; {"Intro - this data is from the STREAM India dataset PI Prof Emily Jones Birkbeck University, it has been decoded using Task Engine 2 custom scripts which were originally written by Luke Mason"}];
         root_path = 'E:\Birkbeck\STREAM INDIA\Datasets\';
-        raw_path = fullfile(root_path, '0. Untouched\');
     case 'Malawi'
         % Set Malawi specific notes and raw_path
         notes = [notes; {"Intro - this data is from the STREAM Malawi dataset PI Prof Emily Jones Birkbeck University, it has been decoded using Task Engine 2 custom scripts which were originally written by Luke Mason"}];
         root_path = 'E:\Birkbeck\STREAM\Datasets\';
-        raw_path = 'E:\Birkbeck\STREAM\data download MW\';
 end
 
 % The rest of the notes
@@ -68,13 +66,14 @@ notes = [notes; {'eyeT_info - uses the events from tab to loop through the trial
 
 %% Find data
 % Set raw_outpath and get subfolders
+raw_path = fullfile(root_path, '0. Untouched\');
 raw_outpath = strcat(root_path, '1. Raw\');
 eeg_output_path = fullfile(root_path, '1. Raw\EEG\');
 et_output_path = fullfile(root_path, '1. Raw\ET\');
 subfolders = dir(raw_path);
 
 % Loop through the subfolders, Matlab on Windows finds two extra each time. Starting at 3 skips those.
-for subfolderIndex = 3:length(subfolders)
+for subfolderIndex = 1:length(subfolders)
     % Sets the subfolder name and if it starts with "._" it is a temporary file and ignored
     subfolder = subfolders(subfolderIndex).name;
     if ~startsWith(subfolder, 'MW')
@@ -119,7 +118,7 @@ for subfolderIndex = 3:length(subfolders)
                 % Decodes the eyetracking while also removing task engine structures
                 % Currently this only sorts two types of tasks as the end data has task specific names
                 % decode_et_v2(subfolder, main_output_path)
-                [et_data] = decode_et_v2(subfolder, subsubfolderFullPath, et_output_path);
+                [et_data] = decode_et_v2(subfolder, subsubfolderFullPath, root_path);
                 % If successful then records that it was successful, the path and the et_data
                 et_found = 1;
                 ppt_info.decoded_et = [ppt_info.decoded_et; {strcat(et_data.Path_Session, 'decoded_eyetracking\ET_Data_', et_data.ID, '.mat')}];
@@ -144,13 +143,11 @@ for subfolderIndex = 3:length(subfolders)
                 eeg_found = 0;
             else
                 % Convert .easy format into eeglab, while also pulling in the .info file as a comment/key
-                eeg_data = convert_easy_to_eeglab(easy_files);
+                eeg_data = convert_easy_to_eeglab(easy_files, eeg_output_path);
 
                 % If successful store the eeg_data, path and mark that eeg was found in this subsubfolder
-                subfolder_eeg_data = [subfolder_eeg_data; {eeg_data}];
-                for i = 1:length(eeg_data)
-                    ppt_info.decoded_eeg = [ppt_info.decoded_eeg; {eeg_data{i, 1}.new_filepath}];
-                end
+                subfolder_eeg_data = [subfolder_eeg_data; eeg_data];
+
                 eeg_found = 1;
             end
         else
@@ -159,6 +156,27 @@ for subfolderIndex = 3:length(subfolders)
         end
         % This will be important later to know how many valid files there are for this participant
         ppt_info.eeg_found = [ppt_info.eeg_found, eeg_found];
+    end
+
+    if eeg_found
+        for i = 1:length(subfolder_eeg_data)
+            if strcmp(dataset, 'India')
+                if i == 1
+                    EEG = subfolder_eeg_data(1);
+                else
+                    EEG = pop_mergeset(EEG, subfolder_eeg_data(i));
+                end
+            end
+
+            try
+                ppt_info.decoded_eeg = [ppt_info.decoded_eeg; {eeg_data{i, 1}.new_filepath}];
+            catch
+                ppt_info.decoded_eeg = [ppt_info.decoded_eeg; {subfolder_eeg_data.new_filepath}];
+            end
+        end
+
+        % Save data in .mat format in the Raw EEG folder
+        save(fullfile(eeg_output_path, [subfolders(subfolderIndex).name '.mat']), "EEG")
     end
 
     % Checks whether any et or eeg was found within all the subfolders checked for this participant.
@@ -265,31 +283,31 @@ for subfolderIndex = 3:length(subfolders)
     data_log = [data_log; {ppt_info}];
 
     % To save hassle can also save data to standalone folders rather than in the individual raw data subfolders
-    if save_to_folders
-        if eeg_found
-            for i = 1:length(ppt_info.decoded_eeg)
-                try
-                    EEG = eeg_data{1,1};
-                catch
-                    try
-                        EEG = eeg_data;
-                    catch
-                        input('Issue with EEG struct, may need a better solution')
-                        crashMe
-                    end
-                end
-                f_name = split(ppt_info.decoded_eeg{i}, '\'); f_name = f_name(end);
-                if ~startsWith(f_name, 'IN') | ~startsWith(f_name, 'MW')
-                    f_name = split(f_name, '_'); f_name = f_name(2);
-                end
-                save(strcat(eeg_output_path, f_name{:}), "EEG")
-            end
-        end
-        % disp('ET saving currently disabled')
-        if et_found
-            save(strcat(et_output_path, et_data.ID, '.mat'), "et_data")
-        end
-    end
+    % if save_to_folders
+    %     if eeg_found
+    %         for i = 1:length(ppt_info.decoded_eeg)
+    %             try
+    %                 EEG = eeg_data{1,1};
+    %             catch
+    %                 try
+    %                     EEG = eeg_data;
+    %                 catch
+    %                     input('Issue with EEG struct, may need a better solution')
+    %                     crashMe
+    %                 end
+    %             end
+    %             f_name = split(ppt_info.decoded_eeg{i}, '\'); f_name = f_name(end);
+    %             if ~startsWith(f_name, 'IN') | ~startsWith(f_name, 'MW')
+    %                 f_name = split(f_name, '_'); f_name = strjoin(f_name(2:3), '_');
+    %             end
+    %             save(strcat(eeg_output_path, f_name), "EEG")
+    %         end
+    %     end
+    %     % disp('ET saving currently disabled')
+    %     if et_found
+    %         save(strcat(et_output_path, et_data.ID, '.mat'), "et_data")
+    %     end
+    % end
 
 end
 
