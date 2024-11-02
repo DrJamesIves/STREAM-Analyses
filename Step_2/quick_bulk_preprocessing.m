@@ -61,9 +61,10 @@ switch dataset
     case 'Malawi'
         root = 'E:\Birkbeck\STREAM\Datasets\2. Preprocessed\';
         root_path = fullfile(root, '2.1 Epoched_EEG\');
+        % root_path = 'E:\Birkbeck\STREAM\Datasets\2. Preprocessed\2.2 Preprocessed_EEG\2.2.1 Full\';
         outpath_full = fullfile(root, '2.2 Preprocessed_EEG\2.2.1 Full\');
         outpath_segmented = fullfile(root, '2.2 Preprocessed_EEG\2.2.2 Segmented\');
-                rejected_path = fullfile(root, '2.2 Preprocessed_EEG\2.2.3 Rejected data\');
+        rejected_path = fullfile(root, '2.2 Preprocessed_EEG\2.2.3 Rejected data\');
         outpath_fft_full = fullfile(root, '2.4 FFT\2.4.1 Full\');
         outpath_fft_segmented = fullfile(root, '2.4 FFT\2.4.2 Segmented\');
         outpath_fft_segmented_whole_head_avg = fullfile(root, '2.4 FFT\2.4.3 Segmented Whole Head Averaged\');
@@ -71,11 +72,11 @@ switch dataset
 
     case 'India'
         root = 'E:\Birkbeck\STREAM INDIA\Datasets\2. Preprocessed\';
-        % root_path = fullfile(root, '2.1 Epoched_EEG\');
-        root_path = 'E:\Birkbeck\STREAM INDIA\Datasets\2. Preprocessed\2.2 Preprocessed_EEG\2.2.1 Full\';
+        root_path = fullfile(root, '2.1 Epoched_EEG\');
+        % root_path = 'E:\Birkbeck\STREAM INDIA\Datasets\2. Preprocessed\2.2 Preprocessed_EEG\2.2.1 Full\';
         outpath_full = fullfile(root, '2.2 Preprocessed_EEG\2.2.1 Full\');
         outpath_segmented = fullfile(root, '2.2 Preprocessed_EEG\2.2.2 Segmented\');
-                rejected_path = fullfile(root, '2.2 Preprocessed_EEG\2.2.3 Rejected data\');
+        rejected_path = fullfile(root, '2.2 Preprocessed_EEG\2.2.3 Rejected data\');
         outpath_fft_full = fullfile(root, '2.4 FFT\2.4.1 Full\');
         outpath_fft_segmented = fullfile(root, '2.4 FFT\2.4.2 Segmented\');
         outpath_fft_segmented_whole_head_avg = fullfile(root, '2.4 FFT\2.4.3 Segmented Whole Head Averaged\');
