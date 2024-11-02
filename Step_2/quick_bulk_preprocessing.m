@@ -141,7 +141,7 @@ for file = 1:length(files)
     load(eeg_file);
     Fs = EEG.srate;
 
-    Chech that the file is above the minimum length, if not reject and save
+    % Check that the file is above the minimum length, if not reject and save
     if size(EEG.data, 2) < Fs * min_trial_length
         save(fullfile(rejected_path, files(file).name), 'EEG', 'dataInfo');
         continue
