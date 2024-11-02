@@ -51,9 +51,9 @@ if epoch_eeg
     % preferable. If trial by trial analysis is desired the events will still be present.
     switch dataset
         case 'Malawi'
-            remergeTrials(ds, {'Between_Vid'}, dir(strcat(ds.settings.paths.epochedEEGPath, '*.mat'))) %; 'Gap'; 'Gap_Faces_English'});
+            remergeTrials(ds, {'Between_Vid'}, dir(strcat(ds.settings.paths.epochedEEGPath, '*.mat')), 1) %; 'Gap'; 'Gap_Faces_English'});
         case 'India'
-            remergeTrials(ds, {'Between_Vid'; 'Gap'; 'Gap_Faces_English'}, dir(strcat(ds.settings.paths.epochedEEGPath, '*.mat')));
+            remergeTrials(ds, {'Between_Vid'; 'Gap'; 'Gap_Faces_English'}, dir(strcat(ds.settings.paths.epochedEEGPath, '*.mat')), 1);
     end
 end
 
