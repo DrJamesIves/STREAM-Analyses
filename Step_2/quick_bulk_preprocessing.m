@@ -131,9 +131,9 @@ for file = 1:length(files)
     end
 
     % Uncomment to only focus on one trial type
-    if ~contains(files(file).name, 'Rest_Vid_Toy_Onset')
-        continue
-    end
+    % if ~contains(files(file).name, 'Rest_Vid_Toy_Onset')
+    %     continue
+    % end
 
     disp(fprintf('Processing ...%s', eeg_file))
 
