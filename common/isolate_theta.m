@@ -15,10 +15,20 @@ addpath('E:\Birkbeck\Scripts\Stream\Theta\');
 % addpath(genpath('E:\Birkbeck\Scripts\Stream\brainstorm-tools\'));
 addpath(genpath('E:\Birkbeck\Scripts\James Common\'));
 
-root_path = 'E:\Birkbeck\STREAM INDIA\Datasets\';
-data_path = fullfile(root_path, '2. Preprocessed\2.4 FFT\2.4.1 Full\');
-output_averaged_spectral_folder = fullfile(root_path, '2. Preprocessed\Theta data\');
-output_folder_ET = fullfile(root_path, '1. Raw\ET\');
+dataset = 'India';
+
+switch dataset
+    case 'Malawi'
+        root = 'E:\Birkbeck\STREAM\Datasets\';
+    case 'India'
+        root = 'E:\Birkbeck\STREAM INDIA\Datasets\';
+end
+
+epoch_path = fullfile(root, '2. Preprocessed\2.1 Epoched_EEG');
+preproc_path = fullfile(root, '2. Preprocessed\2.2 Preprocessed_EEG\2.2.1 Full');
+data_path = fullfile(root, '3. Analysed\3.1 FFT\3.1.1 Full\');
+output_averaged_spectral_folder = fullfile(root, '3. Analysed\3.2 Theta data\');
+output_folder_ET = fullfile(root, '1. Raw\ET\');
 
 % To save on clutter make the folders needed manually
 folders = {output_averaged_spectral_folder; ...
@@ -31,7 +41,7 @@ for folder = 1:length(folders)
 end
 
 %% Setup
-ds = getSettings();
+ds = getSettings(dataset);
 lower_bound = 4;
 upper_bound = 7;
 
@@ -46,6 +56,7 @@ ppt_list = {};
 condition_list = {};
 region_list = {};
 theta_power_list = [];
+num_trials_list = [];
 
 % Channel labels
 channel_labels = {'T7', 'P4', 'Cz', 'Pz', 'P3', 'P8', 'Oz', 'O2', 'T8', ...
@@ -79,20 +90,12 @@ for file = 3:length(files)-1
 
     % Find and label the conditon, as there are multiple parts a direct search is needed
     switch parts{2}
-        case 'Gap'
+        case {'Gap', 'Gap-merged', 'Reading', 'Reading-merged', 'Rocket', 'Rocket-merged'}
             condition = parts{2};
-        case {'Gap', 'Reading', 'Rocket'}
-            condition = parts{2};
-            % Adds the trial number on the end
-            condition = [condition, '_', parts{end}];
-        case 'Between'
-            condition = strjoin(parts(2:3), '_');
         case {'Aud', 'Between', 'fast'}
             condition = strjoin(parts(2:3), '_');
-            condition = [condition, '_', parts{end}];
         case 'Face'
             condition = strjoin(parts(2:6), '_');
-            condition = [condition, '_', parts{end}];
         case 'Rest'
             switch parts{4}
                 case 'Face'
@@ -103,9 +106,25 @@ for file = 3:length(files)-1
             % Differentiates merged and non-merged files
             if strcmp(parts{5}, 'Onset-merged')
                 condition = [condition, '-merged'];
-            else
-                condition = [condition, '_', parts{end}];
+            % else
+            %     condition = [condition, '_', parts{end}];
             end
+    end
+
+    if contains(condition, 'merged')
+        switch condition
+            case {'Between_Vid-merged', 'fast_erp-merged', 'Gap-merged'}
+                temp = load(fullfile(epoch_path, files(file).name));
+            case {'Social_Rest_Vid-merged', 'Non-social_Rest_Vid-merged', 'Rest_Vid_Face_Onset-merged', 'Rest_Vid_Toy_Onset-merged'}
+                temp = load(fullfile(preproc_path, files(file).name));
+            otherwise
+                crashMe
+        end
+        num_trials = temp.EEG.num_trials_merged;
+        clear temp
+    else
+        condition = [condition, '_', parts{end}];
+        num_trials = 1;
     end
 
     whole_head_theta = mean(squeeze(mean(fft(1,:,thetaIndex), 2)),1);
@@ -119,19 +138,20 @@ for file = 3:length(files)-1
     condition_list = [condition_list; condition; condition; condition; condition; condition];
     region_list = [region_list; {'Whole head'; 'Frontal'; 'Central'; 'Parietal'; 'Occipital'}];
     theta_power_list = [theta_power_list; whole_head_theta; frontal_theta; central_theta; parietal_theta; occipital_theta];
+    num_trials_list = [num_trials_list; num_trials; num_trials; num_trials; num_trials; num_trials];
 end
 
 % Create the table
-raw_dataset = table(ppt_list, condition_list, region_list, theta_power_list, ...
-    'VariableNames', {'ID', 'Condition', 'Region', 'AveragedThetaPower'});
+raw_dataset = table(ppt_list, condition_list, region_list, theta_power_list, num_trials_list, ...
+    'VariableNames', {'ID', 'Condition', 'Region', 'AveragedThetaPower', 'Num merged trials'});
 
 % Aggregate data by participant, condition, and region
 [uniqueKeys, ~, idx] = unique(raw_dataset(:, {'ID', 'Condition', 'Region'}), 'rows');
 averagedThetaPower = accumarray(idx, raw_dataset.AveragedThetaPower, [], @mean);
 
 % Create the final aggregated table
-theta_table = table(uniqueKeys.ID, uniqueKeys.Condition, uniqueKeys.Region, averagedThetaPower, ...
-    'VariableNames', {'ID', 'Condition', 'Region', 'AveragedThetaPower'});
+theta_table = table(uniqueKeys.ID, uniqueKeys.Condition, uniqueKeys.Region, averagedThetaPower, num_trials_list, ...
+    'VariableNames', {'ID', 'Condition', 'Region', 'AveragedThetaPower', 'NumTrials'});
 
 % Save the table
 save(fullfile(output_averaged_spectral_folder, 'theta_table.mat'), 'theta_table');
