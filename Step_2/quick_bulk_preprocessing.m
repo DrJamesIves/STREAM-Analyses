@@ -43,45 +43,38 @@ addpath(genpath('E:\Birkbeck\Scripts\James Common\'));
 % If you need to epoch the EEG you will need to manually change the getSettings file to match the location of the files and which tasks you would like
 % to epoch
 if epoch_eeg
-    in = input('Have you changed getSettings file for the EEG trial epoching?', 's');
-    ds = getSettings();
+    % in = input('Have you changed getSettings file for the EEG trial epoching?', 's');
+    ds = getSettings(dataset);
     epochEEG(ds);
     % Some tasks are very small but also spaced out within the task list. It makes sense from an preprocessing perspective to remerge them after 
     % epoching as many steps have a minimum length. Similarly, for analyses such as FOOOF, having a longer continuous trial that can be segmented is
     % preferable. If trial by trial analysis is desired the events will still be present.
     switch dataset
         case 'Malawi'
-            remergeTrials(ds, {'Between_Vid'}, dir(strcat(ds.settings.paths.epochedEEGPath, '*.mat')), 1) %; 'Gap'; 'Gap_Faces_English'});
+            remergeTrials(ds, {'Between_Vid'; 'fast_erp'}, ds.settings.paths.epochedEEGPath, 0) %; 'Gap'; 'Gap_Faces_English'}); % dir(strcat(, '*.mat'))
         case 'India'
-            remergeTrials(ds, {'Between_Vid'; 'Gap'; 'Gap_Faces_English'}, dir(strcat(ds.settings.paths.epochedEEGPath, '*.mat')), 1);
+            remergeTrials(ds, {'Between_Vid'; 'fast_erp'; 'Gap'; 'Gap_Faces_English'}, ds.settings.paths.epochedEEGPath, 0); % dir(strcat(, '*.mat'))
     end
 end
 
 switch dataset
     case 'Malawi'
-        root = 'E:\Birkbeck\STREAM\Datasets\2. Preprocessed\';
-        root_path = fullfile(root, '2.1 Epoched_EEG\');
-        % root_path = 'E:\Birkbeck\STREAM\Datasets\2. Preprocessed\2.2 Preprocessed_EEG\2.2.1 Full\';
-        outpath_full = fullfile(root, '2.2 Preprocessed_EEG\2.2.1 Full\');
-        outpath_segmented = fullfile(root, '2.2 Preprocessed_EEG\2.2.2 Segmented\');
-        rejected_path = fullfile(root, '2.2 Preprocessed_EEG\2.2.3 Rejected data\');
-        outpath_fft_full = fullfile(root, '2.4 FFT\2.4.1 Full\');
-        outpath_fft_segmented = fullfile(root, '2.4 FFT\2.4.2 Segmented\');
-        outpath_fft_segmented_whole_head_avg = fullfile(root, '2.4 FFT\2.4.3 Segmented Whole Head Averaged\');
-        outpath_fft_segmented_regional_avg = fullfile(root, '2.4 FFT\2.4.4 Segmented Regional Averaged\');
-
+        root = 'E:\Birkbeck\STREAM\Datasets\';
     case 'India'
-        root = 'E:\Birkbeck\STREAM INDIA\Datasets\2. Preprocessed\';
-        root_path = fullfile(root, '2.1 Epoched_EEG\');
-        % root_path = 'E:\Birkbeck\STREAM INDIA\Datasets\2. Preprocessed\2.2 Preprocessed_EEG\2.2.1 Full\';
-        outpath_full = fullfile(root, '2.2 Preprocessed_EEG\2.2.1 Full\');
-        outpath_segmented = fullfile(root, '2.2 Preprocessed_EEG\2.2.2 Segmented\');
-        rejected_path = fullfile(root, '2.2 Preprocessed_EEG\2.2.3 Rejected data\');
-        outpath_fft_full = fullfile(root, '2.4 FFT\2.4.1 Full\');
-        outpath_fft_segmented = fullfile(root, '2.4 FFT\2.4.2 Segmented\');
-        outpath_fft_segmented_whole_head_avg = fullfile(root, '2.4 FFT\2.4.3 Segmented Whole Head Averaged\');
-        outpath_fft_segmented_regional_avg = fullfile(root, '2.4 FFT\2.4.4 Segmented Regional Averaged\');
+        root = 'E:\Birkbeck\STREAM INDIA\Datasets\';
 end
+
+preproc_root = fullfile(root, '2. Preprocessed\');
+root_path = fullfile(preproc_root, '2.1 Epoched_EEG\');
+outpath_full = fullfile(preproc_root, '2.2 Preprocessed_EEG\2.2.1 Full\');
+outpath_segmented = fullfile(preproc_root, '2.2 Preprocessed_EEG\2.2.2 Segmented\');
+rejected_path = fullfile(preproc_root, '2.2 Preprocessed_EEG\2.2.3 Rejected data\');
+
+analysis_root = fullfile(root, '3. Analysed\');
+outpath_fft_full = fullfile(analysis_root, '3.1 FFT\3.4.1 Full\');
+outpath_fft_segmented = fullfile(analysis_root, '3.1 FFT\3.4.2 Segmented\');
+outpath_fft_segmented_whole_head_avg = fullfile(analysis_root, '3.1 FFT\3.4.3 Segmented Whole Head Averaged\');
+outpath_fft_segmented_regional_avg = fullfile(analysis_root, '3.1 FFT\3.4.4 Segmented Regional Averaged\');
 
 % Grab the files
 files = dir(root_path);

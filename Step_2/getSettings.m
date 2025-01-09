@@ -1,4 +1,4 @@
-function [ds] = getSettings
+function [ds] = getSettings(dataset)
 
 % ------------------------------------------------------------------------------------------------------
 % Author: James Ives
@@ -38,7 +38,15 @@ ds.settings.general.procET                          = 0; % Whether you want to p
 % First we're going to set the paths, it's expected that there will be a rootpath, within the rootpath there should be a data folder, within the
 % data folder each participant should have it's own folder. Data will be saved in the raw folder and preprocessed folders
 % General paths
-ds.settings.paths.rootPath                          = fullfile('E:\Birkbeck\STREAM INDIA\Datasets');
+if strcmp(dataset, 'Malawi')
+    ds.settings.paths.rootPath                          = fullfile('E:\Birkbeck\STREAM\Datasets');
+elseif strcmp(dataset, 'India')
+    ds.settings.paths.rootPath                          = fullfile('E:\Birkbeck\STREAM INDIA\Datasets');
+else
+    % Raise an error with a meaningful message
+    error('InvalidDataset:LabelError', 'Dataset not properly labelled. Please use "Malawi" or "India".');
+end
+
 [ds.settings.paths.rootPath]                        = checkPathEnd(ds.settings.paths.rootPath);
 
 if ds.settings.general.procEEG

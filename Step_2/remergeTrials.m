@@ -15,14 +15,20 @@ function remergeTrials(ds, merge_tasks, input_folder, delete_files)
 if nargin == 0
     addpath('C:\Users\james\Documents\MATLAB')
     eeglab
-    ds = getSettings();
+    dataset = 'India';
+    ds = getSettings(dataset);
     % merge_tasks = ds.settings.trialNamesToMerge;
     % % Get the epoched filenames from the epoched files
     % epoched_files = ds.settings.paths.epochedEEGPath;
     % delete_files = 1;
 
     merge_tasks = {'Rest_Vid_Face_Onset'; 'Rest_Vid_Toy_Onset'};
-    input_folder = 'E:\Birkbeck\STREAM\Datasets\2. Preprocessed\2.2 Preprocessed_EEG\2.2.1 Full';
+    switch dataset
+        case 'Malawi'
+            input_folder = 'E:\Birkbeck\STREAM\Datasets\2. Preprocessed\2.2 Preprocessed_EEG\2.2.1 Full';
+        case 'India'
+            input_folder = 'E:\Birkbeck\STREAM INDIA\Datasets\2. Preprocessed\2.2 Preprocessed_EEG\2.2.1 Full';
+    end
     delete_files = 0;
 end
 
@@ -71,6 +77,8 @@ for name = 1:length(original_names)
 
         % Save the new concatenated file
         EEG = EEG_full;
+        EEG.num_trials_merged = length(files_to_merge);
+        ds.dataInfo.num_trials_merged = length(files_to_merge);
         save(fullfile(merge_folder{:}, [merge_fnames{1}(1:end-6), '-merged.mat']), 'EEG', 'ds')
 
     end

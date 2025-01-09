@@ -37,7 +37,8 @@ function epochEEG(ds)
 if nargin == 0
     addpath('E:\Birkbeck\Scripts\Stream\Theta\');
     addpath('E:\Birkbeck\Scripts\James Common\');
-    ds = getSettings;
+    dataSet = 'Malawi';
+    ds = getSettings(dataSet);
 end
 % Finds all the raw EEG files
 ds.dataInfo.files = dir(strcat(ds.settings.paths.dataPath, '*.mat'));
